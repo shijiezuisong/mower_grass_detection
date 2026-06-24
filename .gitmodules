@@ -1,0 +1,18 @@
+[submodule "firmware/libraries/lwrb"]
+	path = firmware/libraries/lwrb
+	url = https://github.com/MaJerle/lwrb.git
+	branch = master
+
+[submodule "firmware/libraries/lsm6dsl-pid"]
+	path = firmware/libraries/lsm6dso-pid
+	url = https://github.com/STMicroelectronics/lsm6dso-pid
+
+[submodule "firmware/libraries/threadx"]
+	path = firmware/libraries/threadx
+	url = https://github.com/eclipse-threadx/threadx.git
+	branch = master
+
+[submodule "firmware/libraries/segger_real_time_transefer"]
+	path = firmware/libraries/segger_real_time_transefer
+	url = https://e.coding.net/FishDrone/tti_robot/segger_real_time_transefer.git
+	branch = master

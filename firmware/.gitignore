@@ -1,0 +1,15 @@
+*.scvd
+*.ini
+*.jlink
+*.emSession
+*.clangd
+/**/JLinkLog.txt
+.vscode/
+project/EmbeddedStudio/Output
+/scripts/.idea
+__pycache__
+/output/
+.metadata
+build/
+version.h
+output/ 
