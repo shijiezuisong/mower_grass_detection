@@ -1,1 +1,0 @@
-../../../../risc-v_common/example_build/uart/uart_qemu_ns16550.c

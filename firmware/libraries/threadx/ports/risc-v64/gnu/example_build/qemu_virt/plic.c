@@ -1,1 +1,0 @@
-../../../../risc-v_common/example_build/plic/plic.c

@@ -1,1 +1,0 @@
-../../../../risc-v_common/example_build/trap/trap_qemu.c

@@ -1,0 +1,77 @@
+/* USER CODE BEGIN Header */
+/**
+ ******************************************************************************
+ * @file    app_threadx.h
+ * @author  MCD Application Team
+ * @brief   ThreadX applicative header file
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2021 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
+/* USER CODE END Header */
+/* Define to prevent recursive inclusion -------------------------------------*/
+#ifndef __APP_THREADX_H__
+#define __APP_THREADX_H__
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+/* Includes ------------------------------------------------------------------*/
+#include "tx_api.h"
+
+    /* Private includes ----------------------------------------------------------*/
+    /* USER CODE BEGIN Includes */
+#include <stdint.h>
+    /* USER CODE END Includes */
+
+    /* Exported types ------------------------------------------------------------*/
+    /* USER CODE BEGIN ET */
+
+    /* USER CODE END ET */
+
+    /* Exported constants --------------------------------------------------------*/
+    /* USER CODE BEGIN EC */
+
+    /* USER CODE END EC */
+
+    /* Exported macro ------------------------------------------------------------*/
+    /* USER CODE BEGIN EM */
+
+    /* USER CODE END EM */
+
+    /* Exported functions prototypes ---------------------------------------------*/
+    UINT App_ThreadX_Init(VOID *memory_ptr);
+    void MX_ThreadX_Init(void);
+    /* USER CODE BEGIN EFP */
+
+    /* USER CODE END EFP */
+
+    /* Private defines -----------------------------------------------------------*/
+    /* USER CODE BEGIN PD */
+
+#define TX_THREAD_PRIORITY_UART_RX_ALGO      10 // Linux
+#define TX_THREAD_PRIORITY_UART_RX_MOWER     12 // Push mower
+#define TX_THREAD_PRIORITY_UART_RX_LOG_DEBUG 14
+#define TX_THREAD_PRIORITY_UART_RX_LOG       16 // DEBUG
+
+    /* USER CODE END PD */
+
+    /* USER CODE BEGIN 1 */
+    void     sys_delay_ms(uint32_t nMs);
+    uint32_t sys_get_ms(void);
+    /* USER CODE END 1 */
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* __APP_THREADX_H__ */

@@ -1,0 +1,10 @@
+../driver/drv_uart.c:229:13:usart_start_tx_dma_transfer	59
+../driver/drv_uart.c:117:13:uart_rx_thread_entry	13
+../driver/drv_uart.c:218:6:bsp_uart_init	9
+../driver/drv_uart.c:293:6:bsp_uart_send	2
+../driver/drv_uart.c:305:21:bsp_get_huart	1
+../driver/drv_uart.c:310:6:bsp_uart_install_rx_callback	1
+../driver/drv_uart.c:315:6:HAL_UART_TxCpltCallback	4
+../driver/drv_uart.c:332:6:HAL_UART_RxHalfCpltCallback	4
+../driver/drv_uart.c:344:6:HAL_UART_RxCpltCallback	4
+../driver/drv_uart.c:356:6:HAL_UART_INTERRUPT_HANDLE	5

@@ -1,0 +1,2 @@
+../src/utils.c:3:8:utils_hex2char	2
+../src/utils.c:9:6:utils_hex2str	3
