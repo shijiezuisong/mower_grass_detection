@@ -1,6 +1,0 @@
-[submodule "firmware/libraries/lsm6dso-pid"]
-	path = firmware/libraries/lsm6dso-pid
-	url = https://github.com/STMicroelectronics/lsm6dso-pid
-[submodule "firmware/libraries/lwrb"]
-	path = firmware/libraries/lwrb
-	url = https://github.com/MaJerle/lwrb.git
