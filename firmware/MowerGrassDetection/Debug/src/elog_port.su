@@ -1,8 +1,0 @@
-../src/elog_port.c:22:13:elog_port_init	8	static
-../src/elog_port.c:42:6:elog_port_deinit	0	static
-../src/elog_port.c:52:6:elog_port_output	0	static
-../src/elog_port.c:65:6:elog_port_output_lock	0	static
-../src/elog_port.c:73:6:elog_port_output_unlock	0	static
-../src/elog_port.c:83:13:elog_port_get_time	8	static
-../src/elog_port.c:134:13:elog_port_get_p_info	0	static
-../src/elog_port.c:149:13:elog_port_get_t_info	0	static

@@ -12,4 +12,26 @@ __pycache__
 .metadata
 build/
 version.h
-output/ 
+output/
+
+# STM32CubeIDE / GCC build outputs
+**/Debug/
+**/Release/
+**/.settings/language.settings.xml
+*.o
+*.d
+*.su
+*.cyclo
+*.elf
+*.hex
+*.bin
+*.map
+*.list
+objects.list
+
+# Common temporary files
+*.log
+*.tmp
+*.bak
+Thumbs.db
+.DS_Store
