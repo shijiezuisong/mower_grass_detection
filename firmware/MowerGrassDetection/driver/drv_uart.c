@@ -2,17 +2,49 @@
 
 #define UART_TX_WAIT_TIME_MS 5000
 
+static TX_MUTEX s_uart_tx_mutex[UART_CHANNEL_NUM];
+static bool     s_uart_tx_mutex_ready[UART_CHANNEL_NUM];
+
 // uart, tx_buff_size, rx_buff_size, rx_stack_size, rx_priority
 
-UART_HANDLE_CREATE(USART1, 2048, 1024, 2048, TX_THREAD_PRIORITY_UART_RX_MOWER); // Mower
-UART_HANDLE_CREATE(USART2, 2048, 1024, 2048, TX_THREAD_PRIORITY_UART_RX_LOG);   // Debug
-UART_HANDLE_CREATE(USART6, 2048, 1024, 2048, TX_THREAD_PRIORITY_UART_RX_ALGO);  // Linux
+UART_HANDLE_CREATE(USART1, 1024, 1024, 1024, TX_THREAD_PRIORITY_UART_RX_MOWER); // Mower
+UART_HANDLE_CREATE(USART2, 4096, 1024, 4096, TX_THREAD_PRIORITY_UART_RX_LOG);   // Debug
+UART_HANDLE_CREATE(USART6, 4096, 1024, 4096, TX_THREAD_PRIORITY_UART_RX_ALGO);  // Linux
 
 uarts_handle_t *const uart_handle_array[] = {
     &USART1_handle,
     &USART2_handle,
     &USART6_handle,
 };
+
+static uart_index_e uart_get_index(const uarts_handle_t *uart_handle)
+{
+    for (uint8_t i = 0; i < ARRAYLEN(uart_handle_array); i++)
+    {
+        if (uart_handle_array[i] == uart_handle)
+        {
+            return (uart_index_e)i;
+        }
+    }
+
+    return UART_CHANNEL_NUM;
+}
+
+static void uart_tx_lock(uart_index_e index)
+{
+    if ((index < UART_CHANNEL_NUM) && s_uart_tx_mutex_ready[index])
+    {
+        (void)tx_mutex_get(&s_uart_tx_mutex[index], TX_WAIT_FOREVER);
+    }
+}
+
+static void uart_tx_unlock(uart_index_e index)
+{
+    if ((index < UART_CHANNEL_NUM) && s_uart_tx_mutex_ready[index])
+    {
+        (void)tx_mutex_put(&s_uart_tx_mutex[index]);
+    }
+}
 
 static void usart_process_data(uarts_handle_t *uart_handle, const uint8_t *data, size_t len)
 {
@@ -169,10 +201,14 @@ static void uart_config(uarts_handle_t *uart_handle, uint32_t baudrate, uint32_t
 
 static void bsp_uart_sys_init(uarts_handle_t *uart_handle)
 {
+    uart_index_e index;
+
     if (uart_handle->init_flag)
     {
         return;
     }
+
+    index = uart_get_index(uart_handle);
 
     UINT tx_status = TX_SUCCESS;
 
@@ -211,6 +247,13 @@ static void bsp_uart_sys_init(uarts_handle_t *uart_handle)
 
     /* 初始化发送环形缓冲区 */
     lwrb_init(&uart_handle->lwrb, pointer, uart_handle->tx_buff_size);
+
+    if (index < UART_CHANNEL_NUM)
+    {
+        tx_status = tx_mutex_create(&s_uart_tx_mutex[index], "uart tx", TX_NO_INHERIT);
+        UART_SYS_INIT_ERR_HANDLE(tx_status);
+        s_uart_tx_mutex_ready[index] = true;
+    }
 
     uart_handle->init_flag = true;
 }
@@ -293,13 +336,17 @@ static void usart_start_tx_dma_transfer(uarts_handle_t *uart_handle)
 void bsp_uart_send(uart_index_e index, uint8_t *data, uint16_t len)
 {
     uarts_handle_t *uart_handle = uart_handle_array[index];
+
+    uart_tx_lock(index);
+
     if (lwrb_get_free(&uart_handle->lwrb) >= len)
     {
         lwrb_write(&uart_handle->lwrb, data, len);
 
-        /** 发起串口数据写入 */
         usart_start_tx_dma_transfer(uart_handle);
     }
+
+    uart_tx_unlock(index);
 }
 
 UART_HandleTypeDef *bsp_get_huart(uart_index_e index)
@@ -318,12 +365,15 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
     {
         if (uart_handle_array[i]->huart.Instance == huart->Instance)
         {
+            uart_tx_lock((uart_index_e)i);
+
             /** 该部分的数据已经发送完成, 要跳过 */
             lwrb_skip(&uart_handle_array[i]->lwrb, uart_handle_array[i]->usart_tx_len);
             uart_handle_array[i]->usart_tx_len = 0;
 
             /** 继续发送缓冲区剩下的字节 */
             usart_start_tx_dma_transfer(uart_handle_array[i]);
+            uart_tx_unlock((uart_index_e)i);
             return;
         }
     }

@@ -616,16 +616,16 @@ void elog_output(uint8_t level, const char *tag, const char *file, const char *f
     }
 #endif
 
-    /** 新增序号变量 */ 
+    /** 新增序号变量 */
     static volatile unsigned long log_sequence_num = 0;
-    char seq_buf[16] = {0};
+    char                          seq_buf[16]      = {0};
 
     /** 插入序号（在最开始输出） */
-    if (get_fmt_enabled(level, ELOG_FMT_SEQUENCE)) {
+    if (get_fmt_enabled(level, ELOG_FMT_SEQUENCE))
+    {
         snprintf(seq_buf, sizeof(seq_buf), "[#%lu]", log_sequence_num++);
         log_len += elog_strcpy(log_len, log_buf + log_len, seq_buf);
     }
-
 
     /* package level info */
     if (get_fmt_enabled(level, ELOG_FMT_LVL))

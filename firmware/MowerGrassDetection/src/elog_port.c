@@ -12,6 +12,25 @@
 #include "../driver/drv_uart.h"
 
 static TX_MUTEX mutex_elog_out;
+static UINT     s_elog_mutex_ready;
+
+static void elog_port_try_create_mutex(void)
+{
+    if (s_elog_mutex_ready != 0U)
+    {
+        return;
+    }
+
+    if (TX_THREAD_GET_SYSTEM_STATE() != 0U)
+    {
+        return;
+    }
+
+    if (tx_mutex_create(&mutex_elog_out, "mutex elog out", TX_NO_INHERIT) == TX_SUCCESS)
+    {
+        s_elog_mutex_ready = 1U;
+    }
+}
 // static char     tmp_str[35] = {0};
 
 /**
@@ -21,8 +40,8 @@ static TX_MUTEX mutex_elog_out;
  */
 ElogErrCode elog_port_init(void)
 {
-    /** 初始化互斥量 */
-    tx_mutex_create(&mutex_elog_out, "mutex elog out", TX_NO_INHERIT);
+    s_elog_mutex_ready = 0U;
+    elog_port_try_create_mutex();
 
 #ifdef USING_SEGGER_RTT_DEBUG
     /** Init RTT Tools */
@@ -64,7 +83,12 @@ void elog_port_output(const char *log, size_t size)
  */
 void elog_port_output_lock(void)
 {
-    tx_mutex_get(&mutex_elog_out, TX_WAIT_FOREVER);
+    elog_port_try_create_mutex();
+
+    if ((s_elog_mutex_ready != 0U) && (TX_THREAD_GET_SYSTEM_STATE() == 0U))
+    {
+        (void)tx_mutex_get(&mutex_elog_out, TX_WAIT_FOREVER);
+    }
 }
 
 /**
@@ -72,7 +96,10 @@ void elog_port_output_lock(void)
  */
 void elog_port_output_unlock(void)
 {
-    tx_mutex_put(&mutex_elog_out);
+    if ((s_elog_mutex_ready != 0U) && (TX_THREAD_GET_SYSTEM_STATE() == 0U))
+    {
+        (void)tx_mutex_put(&mutex_elog_out);
+    }
 }
 
 /**

@@ -268,7 +268,7 @@ int32_t  BSP_I2C1_ReadReg16(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint
 
   if (HAL_I2C_Mem_Read(&hi2c1, DevAddr, Reg, I2C_MEMADD_SIZE_16BIT, pData, Length, BUS_I2C1_POLL_TIMEOUT) != HAL_OK)
   {
-    if (HAL_I2C_GetError(&hi2c1) != HAL_I2C_ERROR_AF)
+    if (HAL_I2C_GetError(&hi2c1) == HAL_I2C_ERROR_AF)
     {
       ret =  BSP_ERROR_BUS_ACKNOWLEDGE_FAILURE;
     }
@@ -431,7 +431,7 @@ __weak HAL_StatusTypeDef MX_I2C1_Init(I2C_HandleTypeDef* hi2c)
   HAL_StatusTypeDef ret = HAL_OK;
 
   hi2c->Instance = I2C1;
-  hi2c->Init.ClockSpeed = 100000;
+  hi2c->Init.ClockSpeed = 400000;
   hi2c->Init.DutyCycle = I2C_DUTYCYCLE_2;
   hi2c->Init.OwnAddress1 = 0;
   hi2c->Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
@@ -458,19 +458,19 @@ static void I2C1_MspInit(I2C_HandleTypeDef* i2cHandle)
 
     __HAL_RCC_GPIOB_CLK_ENABLE();
     /**I2C1 GPIO Configuration
-    PB6     ------> I2C1_SCL
-    PB7     ------> I2C1_SDA
+    PB8     ------> I2C1_SCL
+    PB9     ------> I2C1_SDA
     */
     GPIO_InitStruct.Pin = BUS_I2C1_SCL_GPIO_PIN;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = BUS_I2C1_SCL_GPIO_AF;
     HAL_GPIO_Init(BUS_I2C1_SCL_GPIO_PORT, &GPIO_InitStruct);
 
     GPIO_InitStruct.Pin = BUS_I2C1_SDA_GPIO_PIN;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = BUS_I2C1_SDA_GPIO_AF;
     HAL_GPIO_Init(BUS_I2C1_SDA_GPIO_PORT, &GPIO_InitStruct);
@@ -487,7 +487,7 @@ static void I2C1_MspInit(I2C_HandleTypeDef* i2cHandle)
     hdma_i2c1_rx.Init.MemInc = DMA_MINC_ENABLE;
     hdma_i2c1_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
     hdma_i2c1_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-    hdma_i2c1_rx.Init.Mode = DMA_NORMAL;
+    hdma_i2c1_rx.Init.Mode = DMA_CIRCULAR;
     hdma_i2c1_rx.Init.Priority = DMA_PRIORITY_LOW;
     hdma_i2c1_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
     HAL_DMA_Init(&hdma_i2c1_rx);
@@ -509,9 +509,9 @@ static void I2C1_MspInit(I2C_HandleTypeDef* i2cHandle)
   __HAL_LINKDMA(i2cHandle,hdmatx,hdma_i2c1_tx);
 
     /* Peripheral interrupt init */
-    HAL_NVIC_SetPriority(I2C1_EV_IRQn, 5, 0);
+    HAL_NVIC_SetPriority(I2C1_EV_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
-    HAL_NVIC_SetPriority(I2C1_ER_IRQn, 5, 0);
+    HAL_NVIC_SetPriority(I2C1_ER_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
   /* USER CODE BEGIN I2C1_MspInit 1 */
 
@@ -527,8 +527,8 @@ static void I2C1_MspDeInit(I2C_HandleTypeDef* i2cHandle)
     __HAL_RCC_I2C1_CLK_DISABLE();
 
     /**I2C1 GPIO Configuration
-    PB6     ------> I2C1_SCL
-    PB7     ------> I2C1_SDA
+    PB8     ------> I2C1_SCL
+    PB9     ------> I2C1_SDA
     */
     HAL_GPIO_DeInit(BUS_I2C1_SCL_GPIO_PORT, BUS_I2C1_SCL_GPIO_PIN);
 

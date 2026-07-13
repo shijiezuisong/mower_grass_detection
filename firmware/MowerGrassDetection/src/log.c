@@ -39,26 +39,18 @@ uint8_t test_cnt;
 
 static void thread_log_entry(ULONG thread_input)
 {
+    (void)thread_input;
+
     while (1)
     {
-        if (test_cnt < 200)
-        {
-            test_cnt++;
-        }
-        else
-        {
-            test_cnt = 0;
-        }
-
-        log_i("thread log entry");
-        sys_delay_ms(100);
+        sys_delay_ms(1000);
     }
 }
 
 void blackbox_init(void)
 {
     static TX_THREAD _thread;
-    static uint8_t   _thread_stack[1024 * 1];
+    static ULONG     _thread_stack[(1024U * 1U) / sizeof(ULONG)];
 
     tx_thread_create(&_thread,
                      "logger",

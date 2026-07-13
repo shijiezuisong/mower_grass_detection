@@ -21,7 +21,10 @@
 //  Caution: Make sure that ThreadX does not need more than the provided heap memory (64KBytes in this example).
 //  Read more in STM32CubeIDE User Guide, chapter: "Linker script".
 
-#define USE_DYNAMIC_MEMORY_ALLOCATION
+// USE_DYNAMIC_MEMORY_ALLOCATION is disabled: the application uses a static
+// byte pool (_heap[] in app_azure_rtos.c) and ignores first_unused_memory.
+// Enabling this would reserve an extra 32KB ._threadx_heap in RAM for nothing.
+// #define USE_DYNAMIC_MEMORY_ALLOCATION
 
 #ifdef __CC_ARM
 @/**************************************************************************/

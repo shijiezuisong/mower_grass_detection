@@ -11,6 +11,7 @@
   */
 
 #include "platform.h"
+#include "app_threadx.h"
 
 uint8_t VL53L8CX_RdByte(
 		VL53L8CX_Platform *p_platform,
@@ -69,10 +70,8 @@ uint8_t VL53L8CX_WaitMs(
 		VL53L8CX_Platform *p_platform,
 		uint32_t TimeMs)
 {
-  uint32_t tickstart;
-  tickstart = p_platform->GetTick();
-
-  while ((p_platform->GetTick() - tickstart) < TimeMs);
+	(void)p_platform;
+	sys_delay_ms(TimeMs);
 
   return 0;
 }

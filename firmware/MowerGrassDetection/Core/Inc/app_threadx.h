@@ -29,8 +29,8 @@ extern "C"
 /* Includes ------------------------------------------------------------------*/
 #include "tx_api.h"
 
-    /* Private includes ----------------------------------------------------------*/
-    /* USER CODE BEGIN Includes */
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
 #include <stdint.h>
     /* USER CODE END Includes */
 
@@ -59,6 +59,10 @@ extern "C"
     /* Private defines -----------------------------------------------------------*/
     /* USER CODE BEGIN PD */
 
+#define TICKS_TO_MS(ticks) ((ticks) * (1000 / TX_TIMER_TICKS_PER_SECOND))
+#define MS_TO_TICKS(ms)    ((ms) * TX_TIMER_TICKS_PER_SECOND / 1000)
+
+#define TX_THREAD_PRIORITY_TOF               8
 #define TX_THREAD_PRIORITY_UART_RX_ALGO      10 // Linux
 #define TX_THREAD_PRIORITY_UART_RX_MOWER     12 // Push mower
 #define TX_THREAD_PRIORITY_UART_RX_LOG_DEBUG 14

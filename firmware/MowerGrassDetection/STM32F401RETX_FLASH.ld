@@ -165,7 +165,9 @@ SECTIONS
     __bss_end__ = _ebss;
   } >RAM
 
-  /* ThreadX heap section - required when USE_DYNAMIC_MEMORY_ALLOCATION is enabled in tx_initialize_low_level.s */
+  /* ThreadX heap section - DISABLED: app uses static _heap[] in app_azure_rtos.c.
+     Re-enable together with USE_DYNAMIC_MEMORY_ALLOCATION in tx_initialize_low_level.s
+     if switching to dynamic memory allocation.
   ._threadx_heap :
   {
     . = ALIGN(8);
@@ -173,6 +175,7 @@ SECTIONS
     . = . + 32K;
     . = ALIGN(8);
   } >RAM AT> RAM
+  */
 
   /* User_heap_stack section, used to check that there is enough "RAM" Ram  type memory left */
   ._user_heap_stack :

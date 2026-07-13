@@ -20,7 +20,6 @@
 #include "app_threadx.h"
 #include "main.h"
 #include "dma.h"
-#include "spi.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -88,10 +87,9 @@ int main(void)
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
     MX_DMA_Init();
-    // MX_USART1_UART_Init();
-    // MX_USART2_UART_Init();
-    MX_SPI1_Init();
-    // MX_USART6_UART_Init();
+    MX_USART1_UART_Init();
+    MX_USART2_UART_Init();
+    MX_USART6_UART_Init();
     /* USER CODE BEGIN 2 */
     log_init();
     /* USER CODE END 2 */

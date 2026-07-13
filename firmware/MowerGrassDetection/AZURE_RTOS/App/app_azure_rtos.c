@@ -25,7 +25,13 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <string.h>
+
+#include "usart.h"
 #include "../../src/log.h"
+#include "../../libraries/easylogger/elog.h"
+#include "../../src/grass_density_app.h"
+#include "../../src/vl53l8cx_app.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,58 +56,77 @@ static TX_BYTE_POOL mem_byte_pool;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
+static void tx_app_raw_trace(const char *text);
 
 /* USER CODE END PFP */
 
 /**
- * @brief  Define the initial system.
- * @param  first_unused_memory : Pointer to the first unused memory
- * @retval None
- */
+  * @brief  Define the initial system.
+  * @param  first_unused_memory : Pointer to the first unused memory
+  * @retval None
+  */
 VOID tx_application_define(VOID *first_unused_memory)
 {
-    /*
-     * Using dynamic memory allocation requires to apply some changes to the linker file.
-     * ThreadX needs to pass a pointer to the first free memory location in RAM to the tx_application_define() function,
-     * using the "first_unused_memory" argument.
-     * This require changes in the linker files to expose this memory location.
-     * For EWARM add the following section into the .icf file:
-         place in RAM_region    { last section FREE_MEM };
-     * For MDK-ARM
-         - either define the RW_IRAM1 region in the ".sct" file
-         - or modify the line below in "tx_low_level_initilize.s to match the memory region being used
-            LDR r1, =|Image$$RW_IRAM1$$ZI$$Limit|
-
-     * For STM32CubeIDE add the following section into the .ld file:
-         ._threadx_heap :
-           {
-              . = ALIGN(8);
-              __RAM_segment_used_end__ = .;
-              . = . + 64K;
-              . = ALIGN(8);
-            } >RAM_D1 AT> RAM_D1
-        * The simplest way to provide memory for ThreadX is to define a new section, see ._threadx_heap above.
-        * In the example above the ThreadX heap size is set to 64KBytes.
-        * The ._threadx_heap must be located between the .bss and the ._user_heap_stack sections in the linker script.
-        * Caution: Make sure that ThreadX does not need more than the provided heap memory (64KBytes in this example).
-        * Read more in STM32CubeIDE User Guide, chapter: "Linker script".
-
-     * The "tx_initialize_low_level.s" should be also modified to enable the "USE_DYNAMIC_MEMORY_ALLOCATION" flag.
-     */
-
-    /* USER CODE BEGIN DYNAMIC_MEM_ALLOC */
-    (void)first_unused_memory;
-
-    /* USER CODE BEGIN  tx_application_define */
+  /* USER CODE BEGIN  tx_application_define */
     static uint8_t _heap[1024 * MEM_HEAP_SIZE_KB];
     tx_byte_pool_create(&mem_byte_pool, "mem_byte_pool", &_heap, sizeof(_heap));
 
-  blackbox_init();
-    /* USER CODE END  tx_application_define */
+    tx_app_raw_trace("[TX] blackbox_init begin\r\n");
+    blackbox_init();
+    tx_app_raw_trace("[TX] blackbox_init done\r\n");
 
-    /* USER CODE END DYNAMIC_MEM_ALLOC */
+    tx_app_raw_trace("[TX] vl53 thread init begin\r\n");
+    vl53l8cx_app_thread_init();
+    tx_app_raw_trace("[TX] vl53 thread init done\r\n");
+
+    tx_app_raw_trace("[TX] grass thread init begin\r\n");
+    grass_density_app_thread_init();
+    tx_app_raw_trace("[TX] grass thread init done\r\n");
+  /* USER CODE END  tx_application_define */
+
+  /*
+   * Using dynamic memory allocation requires to apply some changes to the linker file.
+   * ThreadX needs to pass a pointer to the first free memory location in RAM to the tx_application_define() function,
+   * using the "first_unused_memory" argument.
+   * This require changes in the linker files to expose this memory location.
+   * For EWARM add the following section into the .icf file:
+       place in RAM_region    { last section FREE_MEM };
+   * For MDK-ARM
+       - either define the RW_IRAM1 region in the ".sct" file
+       - or modify the line below in "tx_low_level_initilize.s to match the memory region being used
+          LDR r1, =|Image$$RW_IRAM1$$ZI$$Limit|
+
+   * For STM32CubeIDE add the following section into the .ld file:
+       ._threadx_heap :
+         {
+            . = ALIGN(8);
+            __RAM_segment_used_end__ = .;
+            . = . + 64K;
+            . = ALIGN(8);
+          } >RAM_D1 AT> RAM_D1
+      * The simplest way to provide memory for ThreadX is to define a new section, see ._threadx_heap above.
+      * In the example above the ThreadX heap size is set to 64KBytes.
+      * The ._threadx_heap must be located between the .bss and the ._user_heap_stack sections in the linker script.
+      * Caution: Make sure that ThreadX does not need more than the provided heap memory (64KBytes in this example).
+      * Read more in STM32CubeIDE User Guide, chapter: "Linker script".
+
+   * The "tx_initialize_low_level.s" should be also modified to enable the "USE_DYNAMIC_MEMORY_ALLOCATION" flag.
+   */
+
+  /* USER CODE BEGIN DYNAMIC_MEM_ALLOC */
+    (void)first_unused_memory;
+  /* USER CODE END DYNAMIC_MEM_ALLOC */
 }
 
 /* USER CODE BEGIN  0 */
+static void tx_app_raw_trace(const char *text)
+{
+  if (text == NULL)
+  {
+    return;
+  }
+
+  (void)HAL_UART_Transmit(&huart2, (uint8_t *)text, (uint16_t)strlen(text), 20U);
+}
 
 /* USER CODE END  0 */

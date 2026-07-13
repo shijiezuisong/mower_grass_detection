@@ -1,0 +1,3 @@
+powershell -ExecutionPolicy Bypass -File ".\python_scripts\run_receiver.ps1" -Prefix dense
+
+powershell -ExecutionPolicy Bypass -File ".\python_scripts\run_pipeline.ps1

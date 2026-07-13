@@ -20,6 +20,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "app_threadx.h"
+#include "tx_initialize.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -43,6 +44,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
+extern volatile ULONG  _tx_thread_system_state;
+extern volatile uint32_t uwTick;
 
 /* USER CODE END PV */
 
@@ -100,5 +103,22 @@ void sys_delay_ms(uint32_t nMs)
 uint32_t sys_get_ms(void)
 {
     return (uint32_t)((tx_time_get() * 1000U) / TX_TIMER_TICKS_PER_SECOND);
+}
+
+uint32_t HAL_GetTick(void)
+{
+  if (tx_thread_identify() != TX_NULL)
+  {
+    return sys_get_ms();
+  }
+
+  if ((_tx_thread_system_state != TX_INITIALIZE_IN_PROGRESS)
+      && (_tx_thread_system_state != TX_INITIALIZE_ALMOST_DONE)
+      && (_tx_thread_system_state != TX_INITIALIZE_IS_FINISHED))
+  {
+    return sys_get_ms();
+  }
+
+  return uwTick;
 }
 /* USER CODE END 1 */
