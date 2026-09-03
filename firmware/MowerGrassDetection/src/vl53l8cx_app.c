@@ -540,83 +540,104 @@ static void thread_vl53l8cx_entry(ULONG thread_input)
 
 static void vl53l8cx_app_log_frame(void)
 {
-    char     log_buf[VL53L8CX_APP_LOG_BUF_SIZE];
-    int      written;
-    uint8_t  side;
-    uint8_t  row;
-    uint8_t  col;
-    uint8_t  zone;
-    uint8_t  zone_count;
-    uint32_t signal;
-    uint32_t ambient;
-    int16_t  distance;
-    uint8_t  status;
-    size_t   offset;
-    size_t   remaining;
+    /* Log in the same CSV format as vl53l8cx_app_send_linux_frame() so that
+     * debug UART output is directly parseable by tof_usart6_receiver.py and
+     * the visualizer tool without any format conversion.
+     *
+     * Format: TOF,<frame_id>,<ts_ms>,<resolution>,<fps>,D,...,S,...,G,...,A,...,V,...
+     */
+    static char log_buf[VL53L8CX_APP_LOG_BUF_SIZE];
+    int     written;
+    uint8_t i;
+    uint8_t zone_count;
+    size_t  offset;
+    size_t  remaining;
 
-    offset = 0U;
-    remaining = sizeof(log_buf);
     zone_count = (VL53L8CX_APP_RESOLUTION == VL53L8CX_RESOLUTION_4X4) ? 16U : 64U;
-    side = (zone_count == 16U) ? 4U : 8U;
+    offset    = 0U;
+    remaining = sizeof(log_buf);
 
-    if (s_header_logged == 0U)
+    /* Header: TOF,frame_id,ts_ms,resolution,fps,D, */
+    written = snprintf(log_buf, remaining,
+                       "TOF,%lu,%lu,%u,%u,D,",
+                       (unsigned long)s_frame_id,
+                       (unsigned long)sys_get_ms(),
+                       (unsigned int)VL53L8CX_APP_RESOLUTION,
+                       (unsigned int)VL53L8CX_APP_FREQ_HZ);
+    if ((written < 0) || ((size_t)written >= remaining)) { return; }
+    offset += (size_t)written; remaining -= (size_t)written;
+
+    /* D: distance_mm */
+    for (i = 0U; i < zone_count; i++)
     {
-        written = snprintf(log_buf,
-                           remaining,
-                           "Cell Format:\n"
-                           "Distance [mm] : Status\n"
-                           "Signal [kcps/spad] : Ambient [kcps/spad]\n"
-                           "------------------------------------------------------------\n");
-        if ((written < 0) || ((size_t)written >= remaining))
-        {
-            return;
-        }
-
-        offset += (size_t)written;
-        remaining -= (size_t)written;
-        s_header_logged = 1U;
+        written = snprintf(log_buf + offset, remaining,
+                           "%s%d", (i == 0U) ? "" : ",", (int)s_results.distance_mm[i]);
+        if ((written < 0) || ((size_t)written >= remaining)) { return; }
+        offset += (size_t)written; remaining -= (size_t)written;
     }
 
-    for (row = 0U; row < side; row++)
+    /* S: target_status */
+    written = snprintf(log_buf + offset, remaining, ",S,");
+    if ((written < 0) || ((size_t)written >= remaining)) { return; }
+    offset += (size_t)written; remaining -= (size_t)written;
+
+    for (i = 0U; i < zone_count; i++)
     {
-        for (col = 0U; col < side; col++)
-        {
-            zone = (uint8_t)((row * side) + col);
-            distance = s_results.distance_mm[zone];
-            status = s_results.target_status[zone];
-            signal = s_results.signal_per_spad[zone];
-            ambient = s_results.ambient_per_spad[zone];
-
-            written = snprintf(log_buf + offset,
-                               remaining,
-                               "%4d : %2u\n%4lu : %2lu%s",
-                               (int)distance,
-                               (unsigned int)status,
-                               (unsigned long)signal,
-                               (unsigned long)ambient,
-                               (col == (uint8_t)(side - 1U)) ? "\n" : " | ");
-            if ((written < 0) || ((size_t)written >= remaining))
-            {
-                return;
-            }
-
-            offset += (size_t)written;
-            remaining -= (size_t)written;
-        }
-
-        written = snprintf(log_buf + offset,
-                           remaining,
-                           "------------------------------------------------------------\n");
-        if ((written < 0) || ((size_t)written >= remaining))
-        {
-            return;
-        }
-
-        offset += (size_t)written;
-        remaining -= (size_t)written;
+        written = snprintf(log_buf + offset, remaining,
+                           "%s%u", (i == 0U) ? "" : ",",
+                           (unsigned int)s_results.target_status[i]);
+        if ((written < 0) || ((size_t)written >= remaining)) { return; }
+        offset += (size_t)written; remaining -= (size_t)written;
     }
 
-    log_i("\n%s", log_buf);
+    /* G: signal_per_spad */
+    written = snprintf(log_buf + offset, remaining, ",G,");
+    if ((written < 0) || ((size_t)written >= remaining)) { return; }
+    offset += (size_t)written; remaining -= (size_t)written;
+
+    for (i = 0U; i < zone_count; i++)
+    {
+        written = snprintf(log_buf + offset, remaining,
+                           "%s%lu", (i == 0U) ? "" : ",",
+                           (unsigned long)s_results.signal_per_spad[i]);
+        if ((written < 0) || ((size_t)written >= remaining)) { return; }
+        offset += (size_t)written; remaining -= (size_t)written;
+    }
+
+    /* A: ambient_per_spad */
+    written = snprintf(log_buf + offset, remaining, ",A,");
+    if ((written < 0) || ((size_t)written >= remaining)) { return; }
+    offset += (size_t)written; remaining -= (size_t)written;
+
+    for (i = 0U; i < zone_count; i++)
+    {
+        written = snprintf(log_buf + offset, remaining,
+                           "%s%lu", (i == 0U) ? "" : ",",
+                           (unsigned long)s_results.ambient_per_spad[i]);
+        if ((written < 0) || ((size_t)written >= remaining)) { return; }
+        offset += (size_t)written; remaining -= (size_t)written;
+    }
+
+    /* V: valid (derived from status: 5 or 9 = 1, else 0) */
+    written = snprintf(log_buf + offset, remaining, ",V,");
+    if ((written < 0) || ((size_t)written >= remaining)) { return; }
+    offset += (size_t)written; remaining -= (size_t)written;
+
+    for (i = 0U; i < zone_count; i++)
+    {
+        const uint8_t valid = (s_results.target_status[i] == 5U) ||
+                              (s_results.target_status[i] == 9U) ? 1U : 0U;
+        written = snprintf(log_buf + offset, remaining,
+                           "%s%u", (i == 0U) ? "" : ",", (unsigned int)valid);
+        if ((written < 0) || ((size_t)written >= remaining)) { return; }
+        offset += (size_t)written; remaining -= (size_t)written;
+    }
+
+    written = snprintf(log_buf + offset, remaining, "\n");
+    if ((written < 0) || ((size_t)written >= remaining)) { return; }
+    offset += (size_t)written;
+
+    log_i("%.*s", (int)offset, log_buf);
 }
 
 static void vl53l8cx_app_send_linux_frame(void)
